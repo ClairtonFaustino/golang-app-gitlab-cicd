@@ -1,0 +1,50 @@
+stages:
+  - test
+  - build
+  - deploy
+
+variables:
+  IMAGE_TAG: "${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}" 
+  DOCKER_DRIVER: overlay2
+
+testes-unitarios:
+  stage: test
+  image: golang:1.22
+  script:
+    - go version
+    - go build ./cmd/server
+
+docker-build:
+  stage: build
+  image: docker:25
+  services:
+    - name: docker:25-dind
+      command: ["--mtu=1460"]
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+  script:
+    - docker build -t "$CI_REGISTRY_IMAGE:$IMAGE_TAG" .
+    - docker push "$CI_REGISTRY_IMAGE:$IMAGE_TAG"
+  needs:
+    - testes-unitarios
+
+deploy-k8s:
+  stage: deploy
+  image: bitnami/kubectl:1.30
+  before_script:
+    - mkdir -p ~/.kube
+    - echo "$KUBE_CONFIG_DATA" | base64 -d > ~/.kube/config
+    - kubectl version --client=true
+    - kubectl config get-contexts || true
+  script:
+    - |
+      set -euo pipefail
+      echo "Namespace: $K8S_NAMESPACE"
+      kubectl get ns "$K8S_NAMESPACE" >/dev/null 2>&1 || kubectl apply -f k8s/namespace.yaml
+      for file in k8s/*.yaml; do
+        echo "Applying $file"
+        envsubst < "$file" | kubectl apply -f -
+      done
+      echo "Deployment completed successfully."
