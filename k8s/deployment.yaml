@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-k8s-template
+  namespace: ${K8S_NAMESPACE}
+  labels:
+    app: go-k8s-template
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: go-k8s-template
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: go-k8s-template
+    spec:
+      imagePullSecrets:
+      - name: regcred
+      containers:
+      - name: go-app
+        image: $CI_REGISTRY_IMAGE:${IMAGE_TAG}
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            memory: "50m"
+            cpu: "64Mi"
+          limits:
+            memory: "250m"
+            cpu: "256Mi"
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 2
+          periodSeconds: 5
+        livenessProbe:
+          httpGet: 
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        env:
+        - name: APP_ENV
+          value: "prod"
+
