@@ -37,11 +37,10 @@ deploy-k8s:
   image: 
     name: bitnami/kubectl:latest
     entrypoint: [""]
-  before_script:
-    - mkdir -p ~/.kube
-    - echo "$KUBE_CONFIG_DATA" | base64 -d > ~/.kube/config
   script:
-    - envsubst < k8s/namespace.yaml | kubectl apply -f -
-    - envsubst < k8s/deployment.yaml | kubectl apply -f -
-    - envsubst < k8s/service.yaml | kubectl apply -f -
+    - kubectl config set-cluster k8s --server=https://$KUBE_HOST:6443 --certificate-authority=$KUBE_API_CERT
+    - kubectl config set-credentials go-k8s-sa --token=$KUBE_API_TOKEN
+    - kubectl config set-context k8s --cluster k8s --user go-k8s-sa
+    - kubectl config use-context k8s  
+    - for file in k8s/*.yaml; do echo "Applying $file" envsubst < "$file" | kubectl apply -f - done
     - kubectl rollout status deployment/go-k8s -n $K8S_NAMESPACE
