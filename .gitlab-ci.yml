@@ -37,12 +37,10 @@ deploy-k8s:
   image: 
     name: bitnami/kubectl:latest
     entrypoint: [""]
-  before_script:
-    - kubectl create secret docker-registry regcred --docker-server=$CI_REGISTRY --docker-username=$CI_REGISTRY_USER --docker-password=$CI_REGISTRY_PASSWORD --namespace=$K8S_NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
   script:
     - kubectl config set-cluster k8s --server=https://$KUBE_HOST:6443 --certificate-authority=$KUBE_API_CERT
-    - kubectl config set-credentials go-k8s-sa --token=$KUBE_API_TOKEN
-    - kubectl config set-context k8s --cluster k8s --user go-k8s-sa
+    - kubectl config set-credentials go-k8s-sa --token=$KUBE_API_TOKEN --namespace=$K8S_NAMESPACE
+    - kubectl config set-context k8s --cluster k8s --user go-k8s-sa --namespace=$K8S_NAMESPACE
     - kubectl config use-context k8s  
     - for file in k8s/*.yaml; do echo "Applying $file"; envsubst < "$file" | kubectl apply -f -; done
     - kubectl set image deployment/go-k8s go-app=$CI_REGISTRY_IMAGE:$IMAGE_TAG -n $K8S_NAMESPACE
