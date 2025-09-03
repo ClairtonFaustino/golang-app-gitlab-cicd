@@ -38,12 +38,7 @@ deploy-k8s:
     name: bitnami/kubectl:latest
     entrypoint: [""]
   before_script:
-    - kubectl create secret docker-registry regcred \
-      --docker-server=$CI_REGISTRY \
-      --docker-username=$CI_REGISTRY_USER \
-      --docker-password=$CI_REGISTRY_PASSWORD \
-      --namespace=$K8S_NAMESPACE \
-      --dry-run=client -o yaml | kubectl apply -f -
+    - kubectl create secret docker-registry regcred --docker-server=$CI_REGISTRY --docker-username=$CI_REGISTRY_USER --docker-password=$CI_REGISTRY_PASSWORD --namespace=$K8S_NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
   script:
     - kubectl config set-cluster k8s --server=https://$KUBE_HOST:6443 --certificate-authority=$KUBE_API_CERT
     - kubectl config set-credentials go-k8s-sa --token=$KUBE_API_TOKEN
