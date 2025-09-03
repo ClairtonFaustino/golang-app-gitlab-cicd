@@ -43,4 +43,5 @@ deploy-k8s:
     - kubectl config set-context k8s --cluster k8s --user go-k8s-sa
     - kubectl config use-context k8s  
     - for file in k8s/*.yaml; do echo "Applying $file"; envsubst < "$file" | kubectl apply -f -; done
+    - kubectl set image deployment/go-k8s go-app=$CI_REGISTRY_IMAGE:$IMAGE_TAG -n $K8S_NAMESPACE
     - kubectl rollout status deployment/go-k8s -n $K8S_NAMESPACE
