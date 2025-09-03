@@ -34,8 +34,9 @@ docker-build:
 
 deploy-k8s:
   stage: deploy
-  image: bitname/kubectl:latest
-  entrypoint: [""]
+  image: 
+    name: bitnami/kubectl:latest
+    entrypoint: [""]
   before_script:
     - mkdir -p ~/.kube
     - echo "$KUBE_CONFIG_DATA" | base64 -d > ~/.kube/config
