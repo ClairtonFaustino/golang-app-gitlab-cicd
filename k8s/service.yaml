@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: go-k8s-template
+  name: go-k8s-service
   namespace: ${K8S_NAMESPACE}
   labels:
     app: go-k8s-template
 spec:
   selector:
-    app: go-k8s-template
+    app: go-k8s
   ports:
   - name: http
     protocol: TCP
