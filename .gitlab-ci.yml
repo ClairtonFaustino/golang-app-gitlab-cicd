@@ -10,7 +10,7 @@ variables:
   IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
 
 go-build:
-  stage: test
+  stage: go-build
   image: golang:1.22
   script:
     - go version
